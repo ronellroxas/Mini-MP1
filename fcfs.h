@@ -3,5 +3,5 @@
  */
  
  void print(int x, int y, int z) {
- 	printf("x:%d y:%d z:%d", x, y, z);
+ 	printf("x:%d y:%d z:%d\n", x, y, z);
  }
