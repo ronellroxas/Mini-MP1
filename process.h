@@ -12,6 +12,10 @@ struct ProcessStruct {
 	int processID;
 	int arrivalTime;
 	int executionTime;
+	int *startTimes;	//dynamic array for starting times
+	int *endTimes;		//dynamic array for starting times
+	int waitingTime;
+	int turnAroundTime;
 };
 
 typedef struct ProcessStruct Process;
