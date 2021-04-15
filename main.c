@@ -14,6 +14,23 @@
 #include"rr.h"
 #include"process.h"
 
+//basic printing function following spec format
+void printOutput(Process *processList, int y) {
+	int i = 0;
+	for(i = 0; i < y; i++) {
+		printf("P[%d]\n", processList[i].processID);
+		int z = 0;
+		for(z = 0; z < processList[i].timeSize; z++) {
+			if(processList[i].startTimes[z] + processList[i].endTimes[z] > 0) {
+				printf("Start time: %d End time: %d\n", processList[i].startTimes[z], processList[i].endTimes[z]);
+			}
+		}
+		printf("Waiting time: %d\n", processList[i].waitingTime);
+		printf("Turnaround time: %d\n", processList[i].turnAroundTime);
+		printf("***********************\n\n");
+	}
+}
+
 int main() {
 	FILE *fp;
 	int x, y, z;
@@ -33,7 +50,6 @@ int main() {
 	
 	if(fp != NULL) {											//if file found
 		fscanf(fp, "%d %d %d\n", &x, &y, &z);	
-		print(x, y, z);											//test function for import (from fcfs.c)
 		
 		processList = (Process*) malloc(y * sizeof(Process));	//create processList array of size y
 		
@@ -48,9 +64,9 @@ int main() {
 			processList[i].executionTime = c;
 		}
 		
-		for(i = 0; i < y; i++) {	//Print processes input for checking
-			printf("ProcessID: %d || Arrival: %d || Execution: %d\n", processList[i].processID, processList[i].arrivalTime, processList[i].executionTime);
-		}
+//		for(i = 0; i < y; i++) {	//Print processes input for checking
+//			printf("ProcessID: %d || Arrival: %d || Execution: %d\n", processList[i].processID, processList[i].arrivalTime, processList[i].executionTime);
+//		}
 		
 		switch(x) {
 			case 0:	
@@ -64,14 +80,23 @@ int main() {
 				break;
 			case 3:	
 				//RR
+				rr(processList, y, z);
+				printOutput(processList, y);
 				break;
 			default:
 				printf("Invalid algorithm input!\n");
 				break;
 		}
 		
+		//free child mallocs then struct malloc
+		int c = 0;
+		for(c = 0; c < y; c++) {	//free space of times per process
+			Process process = processList[c];
+			free(process.startTimes);
+			free(process.endTimes);
+		}
+		free(processList);
 		
-		free(processList);	//free malloc
 	}
 	else {	//if filename not found
 		printf("File %s not found!", filename);
