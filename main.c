@@ -12,20 +12,7 @@
 #include"nsjf.h"
 #include"psjf.h"
 #include"rr.h"
-
-/**
- *Structure for an individual process
- * processID is input a
- * arrivalTime is input b
- * executionTime is input c
- */
-struct ProcessStruct {
-	int processID;
-	int arrivalTime;
-	int executionTime;
-};
-
-typedef struct ProcessStruct Process; 
+#include"process.h"
 
 int main() {
 	FILE *fp;
