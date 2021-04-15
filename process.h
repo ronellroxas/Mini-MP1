@@ -16,6 +16,7 @@ struct ProcessStruct {
 	int *endTimes;		//dynamic array for starting times
 	int waitingTime;
 	int turnAroundTime;
+	int timeSize;		//size of start and end time arrays
 };
 
 typedef struct ProcessStruct Process;
