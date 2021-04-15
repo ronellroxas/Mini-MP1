@@ -17,6 +17,7 @@
 //basic printing function following spec format
 void printOutput(Process *processList, int y) {
 	int i = 0;
+	float total_wait = 0;
 	for(i = 0; i < y; i++) {
 		printf("P[%d]\n", processList[i].processID);
 		int z = 0;
@@ -27,8 +28,11 @@ void printOutput(Process *processList, int y) {
 		}
 		printf("Waiting time: %d\n", processList[i].waitingTime);
 		printf("Turnaround time: %d\n", processList[i].turnAroundTime);
-		printf("***********************\n\n");
+		total_wait+=(float)processList[i].waitingTime;
+		printf("***********************\n");
 	}
+	printf("Average waiting time: %.2f\n", total_wait/(float)y);
+	
 }
 
 int main() {
@@ -71,6 +75,8 @@ int main() {
 		switch(x) {
 			case 0:	
 				//FCFS
+				fcfs(processList, y);
+				printOutput(processList, y);
 				break;
 			case 1:	
 				//NSJF
