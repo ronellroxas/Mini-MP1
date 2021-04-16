@@ -80,6 +80,8 @@ int main() {
 				break;
 			case 1:	
 				//NSJF
+				nsjf(processList, y);
+				printOutput(processList, y);
 				break;
 			case 2:	
 				//PSJF
