@@ -11,7 +11,6 @@ int totalRemaining(Process *processList, int y) {
 	for(i = 0; i < y; i++) {
 		total += processList[i].executionTime;
 	}
-	
 	return total;
 }
 
@@ -39,6 +38,8 @@ void rr(Process *processList, int y, int z) {
 		//set times to 0
 		memset(process->startTimes, 0, process->timeSize  * sizeof(int));
 		memset(process->endTimes, 0, process->timeSize  * sizeof(int));
+		process->waitingTime = 0;
+		process->turnAroundTime = process->executionTime;	//set to execution time only then add waiting time later
 	}
 	
 	
@@ -52,6 +53,9 @@ void rr(Process *processList, int y, int z) {
 		if(process->executionTime > 0) {
 			//set start time
 			process->startTimes[timeIndeces[i]]= currTime;
+			
+			process->waitingTime += currTime;							//waiting time formula part 1 (Summation(startTimes) - Summation(endTimes[i - 1]))
+	
 			if(process->executionTime > z) {							//if time remaining is longer than time slice
 				process->endTimes[timeIndeces[i]] = currTime + z;		//add z to current time for end time
 				currTime += z;
@@ -63,6 +67,13 @@ void rr(Process *processList, int y, int z) {
 				process->executionTime = 0;													//set exec time to 0 since process is finished
 			}
 			
+			//if not last process, subtract to waiting time
+			if(process->executionTime > 0) {							//waiting time formula part 2 (Summation(startTimes) - Summation(endTimes[i - 1]))
+				process->waitingTime -= process->endTimes[timeIndeces[i]];
+			}
+			else {
+				process->turnAroundTime += process->waitingTime;	//add waiting time to turnAroundTime
+			}
 			//printf("%d %d\n", process->startTimes[timeIndeces[i]], process->endTimes[timeIndeces[i]]);
 			timeIndeces[i]++;
 		}

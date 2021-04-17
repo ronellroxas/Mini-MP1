@@ -14,22 +14,41 @@
 #include"rr.h"
 #include"process.h"
 
+//orders processes by process time for output
+void orderByStartingTime(Process *processList, int y) {
+	int i, x;
+	Process temp;	
+	
+	for(i = 0; i < y - 1; i++) {
+		for(x = i; x < y; x++) {
+			if(processList[i].startTimes[0] > processList[x].startTimes[0]) {	//sort by starting time of first executions
+				temp = processList[x];
+				processList[x] = processList[i];
+				processList[i] = temp;
+			}
+		}
+	}
+}
+
 //basic printing function following spec format
 void printOutput(Process *processList, int y) {
 	int i = 0;
 	float total_wait = 0;
+	
+	orderByStartingTime(processList, y);	//order by starting time
+	
 	for(i = 0; i < y; i++) {
 		printf("P[%d]\n", processList[i].processID);
 		int z = 0;
 		for(z = 0; z < processList[i].timeSize; z++) {
 			if(processList[i].startTimes[z] + processList[i].endTimes[z] > 0) {
-				printf("Start time: %d End time: %d\n", processList[i].startTimes[z], processList[i].endTimes[z]);
+				printf("Start time: %-2d End time: %-2d\n", processList[i].startTimes[z], processList[i].endTimes[z]);
 			}
 		}
 		printf("Waiting time: %d\n", processList[i].waitingTime);
 		printf("Turnaround time: %d\n", processList[i].turnAroundTime);
 		total_wait+=(float)processList[i].waitingTime;
-		printf("***********************\n");
+		printf("****************************\n");
 	}
 	printf("Average waiting time: %.2f\n", total_wait/(float)y);
 	
