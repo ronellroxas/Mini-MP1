@@ -21,7 +21,7 @@ void orderByStartingTime(Process *processList, int y) {
 	
 	for(i = 0; i < y - 1; i++) {
 		for(x = i; x < y; x++) {
-			if(processList[i].startTimes[0] > processList[x].startTimes[0]) {	//sort by starting time of first executions
+			if(processList[i].waitingTime > processList[x].waitingTime) {	//sort by starting time of first executions
 				temp = processList[x];
 				processList[x] = processList[i];
 				processList[i] = temp;
@@ -104,6 +104,8 @@ int main() {
 				break;
 			case 2:	
 				//PSJF
+				psjf(processList, y);
+				printOutput(processList, y);
 				break;
 			case 3:	
 				//RR

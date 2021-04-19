@@ -3,18 +3,6 @@
 #include"process.h"
 
 /**
- * Calculates total remaining execution time
- */
-int totalRemaining(Process *processList, int y) {
-	int i = 0;
-	int total = 0;
-	for(i = 0; i < y; i++) {
-		total += processList[i].executionTime;
-	}
-	return total;
-}
-
-/**
  * Round-Robin (RR)
  */
 void rr(Process *processList, int y, int z) {
