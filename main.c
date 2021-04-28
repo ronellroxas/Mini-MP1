@@ -13,6 +13,7 @@
 #include"psjf.h"
 #include"rr.h"
 #include"process.h"
+#include"queue.h"
 
 //orders processes by process time for output
 void orderByStartingTime(Process *processList, int y) {
@@ -54,11 +55,17 @@ void printOutput(Process *processList, int y) {
 	
 }
 
+//Input validation. Check if value is within min max (inclusive)
+int valid(int value, int min, int max) {
+	return value >= min && value <= max;
+}
+
 int main() {
 	FILE *fp;
-	int x, y, z;
+	int x, y, s;
 	char filename[21];		//21 characters filename
 	Process *processList;	//address for dynamic array of Processes
+	Queue *queueList;
 	
 	//get filename
 	printf("Filename: ");
@@ -72,60 +79,49 @@ int main() {
 	fp = fopen(filename , "r");
 	
 	if(fp != NULL) {											//if file found
-		fscanf(fp, "%d %d %d\n", &x, &y, &z);	
-		
-		processList = (Process*) malloc(y * sizeof(Process));	//create processList array of size y
-		
-		int i;
-		for(i = 0; i < y; i++) {					//Get all process infos
-			int a, b, c;							//Process value holders
-			fscanf(fp, "%d %d %d\n", &a, &b, &c);	//Get individual process info (format: A B C\n)
+		fscanf(fp, "%d %d %d\n", &x, &y, &s);	
+
+		//input range validation
+		if(valid(x, 2, 5) && valid(y, 3, 100)) {
+			queueList = (Queue*) malloc(x*sizeof(Queue));
+			processList = (Process*) malloc(y * sizeof(Process));	//create processList array of size y
+
+			int it = 0;
+			int a, b, c;
+			//get queues
+			for(it= 0; it < x; it++) {
+				fscanf(fp, "%d %d %d\n", &a, &b, &c);
+
+				queueList[it].queueID = a;
+				queueList[it].priority = b;
+				queueList[it].quantum = c;
+			}
 			
-			//store to array entry
-			processList[i].processID = a;
-			processList[i].arrivalTime = b;
-			processList[i].executionTime = c;
+			int f, g, h, i, j;
+			//get processes
+			for(it = 0; it < y; it++) {
+				fscanf(fp, "%d %d %d %d %d\n", &f, &g, &h, &i, &j);
+				
+				//store to array entry
+				processList[it].processID = f;
+				processList[it].arrivalTime = g;
+				processList[it].executionTime = h;
+				processList[it].ioBurst = i;
+				processList[it].ioInterval = j;
+			}
+			//free child mallocs then struct malloc
+			// int c = 0;
+			// for(c = 0; c < y; c++) {	//free space of times per process
+			// 	Process process = processList[c];
+			// 	free(process.startTimes);
+			// 	free(process.endTimes);
+			// }
+			free(queueList);
+			free(processList);
 		}
-		
-//		for(i = 0; i < y; i++) {	//Print processes input for checking
-//			printf("ProcessID: %d || Arrival: %d || Execution: %d\n", processList[i].processID, processList[i].arrivalTime, processList[i].executionTime);
-//		}
-		
-		switch(x) {
-			case 0:	
-				//FCFS
-				fcfs(processList, y);
-				printOutput(processList, y);
-				break;
-			case 1:	
-				//NSJF
-				nsjf(processList, y);
-				printOutput(processList, y);
-				break;
-			case 2:	
-				//PSJF
-				psjf(processList, y);
-				printOutput(processList, y);
-				break;
-			case 3:	
-				//RR
-				rr(processList, y, z);
-				printOutput(processList, y);
-				break;
-			default:
-				printf("Invalid algorithm input!\n");
-				break;
+		else {
+			printf("Invalid input format from file!\n");
 		}
-		
-		//free child mallocs then struct malloc
-		int c = 0;
-		for(c = 0; c < y; c++) {	//free space of times per process
-			Process process = processList[c];
-			free(process.startTimes);
-			free(process.endTimes);
-		}
-		free(processList);
-		
 	}
 	else {	//if filename not found
 		printf("File %s not found!", filename);

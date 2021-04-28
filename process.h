@@ -17,6 +17,8 @@ struct ProcessStruct {
 	int waitingTime;
 	int turnAroundTime;
 	int timeSize;		//size of start and end time arrays
+	int ioBurst;		//I
+	int ioInterval;		//J
 };
 
 typedef struct ProcessStruct Process;
