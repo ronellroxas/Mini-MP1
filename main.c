@@ -8,10 +8,6 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
-#include"fcfs.h"
-#include"nsjf.h"
-#include"psjf.h"
-#include"rr.h"
 #include"process.h"
 #include"queue.h"
 
