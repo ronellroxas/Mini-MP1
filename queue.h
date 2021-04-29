@@ -8,7 +8,7 @@
 #include"process.h"
 
 struct queueStruct {
-	int queueID;
+    int queueID;
     int priority;
     int quantum;
     int length;

@@ -97,7 +97,7 @@ void mlfq(Queue *queueList, Process *processList, int x, int y) {
 		
 	}
 
-	for(c = 0; c < x; c++) {	//allocate memory for queue.processList
+	for(c = 0; c < x + 1; c++) {	//allocate memory for queue.processList (+1 for the additional IO queue)
 		Queue *queue = &queueList[c];
 		
 		queue->processList = (Process*) malloc(y * sizeof(int));
@@ -115,7 +115,7 @@ void mlfq(Queue *queueList, Process *processList, int x, int y) {
         
         //if process has remaining time
         if(process->executionTime > 0) {
-           	Queue *queue = &queueList[currQueueIndex];
+            Queue *queue = &queueList[currQueueIndex];
 
             Process *queueProcess = queue->processList + queue->length;
             queueProcess = process;  //add process to queue
