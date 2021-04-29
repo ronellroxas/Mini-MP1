@@ -14,6 +14,7 @@ struct ProcessStruct {
 	int executionTime;
 	int *startTimes;	//dynamic array for starting times
 	int *endTimes;		//dynamic array for starting times
+	int *queueTimes;
 	int waitingTime;
 	int turnAroundTime;
 	int timeSize;		//size of start and end time arrays

@@ -8,6 +8,7 @@
 #include<stdio.h>
 #include<stdlib.h>
 #include<string.h>
+#include"mlfq.h"
 #include"process.h"
 #include"queue.h"
 
@@ -39,7 +40,7 @@ void printOutput(Process *processList, int y) {
 		int z = 0;
 		for(z = 0; z < processList[i].timeSize; z++) {
 			if(processList[i].startTimes[z] + processList[i].endTimes[z] > 0) {
-				printf("Start time: %-2d End time: %-2d\n", processList[i].startTimes[z], processList[i].endTimes[z]);
+				printf("Q[%d] Start time: %-2d End time: %-2d\n",  processList[i].queueTimes[z],processList[i].startTimes[z], processList[i].endTimes[z]);
 			}
 		}
 		printf("Waiting time: %d\n", processList[i].waitingTime);
@@ -105,13 +106,23 @@ int main() {
 				processList[it].ioBurst = i;
 				processList[it].ioInterval = j;
 			}
+
+			//run mlfq
+			mlfq(queueList, processList, x, y);
+			printOutput(processList, y);
+
 			//free child mallocs then struct malloc
-			// int c = 0;
-			// for(c = 0; c < y; c++) {	//free space of times per process
-			// 	Process process = processList[c];
-			// 	free(process.startTimes);
-			// 	free(process.endTimes);
-			// }
+			for(c = 0; c < y; c++) {	//free space of times per process
+				Process process = processList[c];
+				free(process.startTimes);
+				free(process.endTimes);
+				free(process.queueTimes);
+			}
+			
+			//free queue.processList
+			for(c = 0; c < x; c++) {	//free space of times per queue
+				free(queueList[c].processList);
+			}
 			free(queueList);
 			free(processList);
 		}
