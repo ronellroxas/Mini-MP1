@@ -20,6 +20,10 @@ struct ProcessStruct {
 	int timeSize;		//size of start and end time arrays
 	int ioBurst;		//I
 	int ioInterval;		//J
+	int quantum;		//time quantum left for a queue, resets when moving from one queue to another
+	int lastqueue; 		//the index of the last queue the process was in; used for returning to a queue after an i/o burst
+	int nextio; 		//starts off the same number as ioInterval; when decreased to 0, perform an i/o burst, resets back to ioInterval
+	int remExeTime;		//remaining execution time left, basically executionTime but this decreases 
 };
 
 typedef struct ProcessStruct Process;

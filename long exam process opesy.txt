@@ -1,10 +1,10 @@
 Steps: 
-1. read file and set up queues and processes /
-2. arrange processes by arrival time /
-3. arrange queues by priority /
+1. read file and set up queues and processes //
+2. arrange processes by arrival time //
+3. arrange queues by priority //
 
 CURRTIME
-4. put any new (first time to be put into a queue) process/es with arrival time == current time in queue
+4. put any new (first time to be put into a queue) process/es with arrival time == current time in queue /
 5. the process at the head of the current queue is the current process
 6. decrease the current process's remaining execution time for cpu burst by 1, also decrease its time quantum for the current queue by 1, also decrease its next i/o burst time by 1
 7. increase current time by 1 ms
@@ -19,7 +19,8 @@ CURRTIME
 
 LOOP CURRTIME
 
-16. print every process's start and end time for each cpu and i/o burst and which queue it was held in, waiting time, and turnaround time 
+16. calculate each process's waiting and turnaround time //
+17. print every process's start and end time for each cpu and i/o burst and which queue it was held in, waiting time, and turnaround time //
 
 
 formulas:

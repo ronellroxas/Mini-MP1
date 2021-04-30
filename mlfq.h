@@ -46,6 +46,7 @@ int processInQueue(Queue *queueList, int processID, int x) {
     return -1;
 }
 
+//main mlfq function
 void mlfq(Queue *queueList, Process *processList, int x, int y) {
     int i = 0, z = 0;
     int *timeIndeces;	//storage for time indices for process
@@ -75,9 +76,6 @@ void mlfq(Queue *queueList, Process *processList, int x, int y) {
         }
     }
 
-    //create dynamic time indeces array then set values to 0
-	timeIndeces = (int*) malloc(y * sizeof(int));
-	memset(timeIndeces, 0, y * sizeof(int));
 	
 	int c = 0;
 	for(c = 0; c < y; c++) {	//dynamically allocate start and end times array for each process
@@ -107,28 +105,36 @@ void mlfq(Queue *queueList, Process *processList, int x, int y) {
     int currTime = processList[0].arrivalTime;
     
     Queue *currQueue = &queueList[0];//initialize starting queue
-    Process *currProcess = &processList[0];	//initialize starting process
+    Process dummy; //initialize starting process as dummy data (to indicate that the 1st process hasn't arrived yet)
+    dummy.processID = -23;
+    Process *currProcess = &dummy;	
     int currQuantum = currQueue->quantum;	//initialize as first quantum
     int currQueueIndex = 0;	//initialize queueIndex
     int currProcessIndex = 0;
     
     currQueue->processList = processList;
     
-    //add all process to first queue
-    for(c = 0; c < y; c++) {
-    	if(currQueue->length == 0) {	//if arriving at empty queue
-    		currQueue->head = currProcess;		
-		}
-		Process *queueProcessListTail = &currQueue->processList[currQueue->length];
-		queueProcessListTail = currProcess;	//add to queue.processList
-		currQueue->length++;
-	}
-	
+    
+    c = 0; //will act as the counter for new processes going into the queue
     //per second loop
     while(currTime <= total) {    	
     	printf("%d\n", currTime);
+    	//put new processes into the top priority queue if their arrival time == current time
+    	for(c = c; c < y; c++) {
+    		if (processList[c].arrivalTime == currTime) {
+    			if(queueList[0].length == 0) {	//if arriving at empty queue
+    				queueList[0].head = &processList[c];		
+			}
+			Process *queueProcessListTail = &(queueList[0].processList[queueList[0].length]);
+			queueProcessListTail = &processList[c];	//add to queue.processList
+			queueList[0].length++;
+		} else {
+			break;
+		}
+    	}
+    	
 		//process execution
-		if(currQueue->length > 0 && currProcess->executionTime > 0) {
+		if(currQueue->length > 0 && currProcess->executionTime > 0 && currProcess->processID != -23) {
 			//if there is still quantum on queue
 			if(currQueue->quantum > 0) {
 				//if first run, set startTime and queue time

@@ -19,12 +19,37 @@ void orderByStartingTime(Process *processList, int y) {
 	
 	for(i = 0; i < y - 1; i++) {
 		for(x = i; x < y; x++) {
-			if(processList[i].waitingTime > processList[x].waitingTime) {	//sort by starting time of first executions
+			if(processList[i].waitingTime > processList[x].waitingTime) {	//sort by waitingTimes
 				temp = processList[x];
 				processList[x] = processList[i];
 				processList[i] = temp;
 			}
 		}
+	}
+}
+
+//calculates the waiting time and turnaround time of the processes 
+void calcOutput(Process *processList, int y, int q_count) {
+	int i = 0;
+	int x = 0;
+	for(i = 0; i < y; i++) {
+		int wait_time = 0;
+		int total_io = 0; //total io burst count
+		for (x = 0; x < processList[i].timeSize; x++) {
+			if (processList[i].queueTimes[x] != q_count) { //only cpu bursts are counted, i/o bursts don't
+				if (x = 0) { //calculate waiting time for first cpu burst
+					wait_time += (processList[i].startTimes[x] - processList[i].arrivalTime);
+				} else if (x = processList[i].timeSize - 1) { //calculate waiting time for last cpu burst
+					wait_time += (processList[i].startTimes[x] - processList[i].endTimes[x-1] - processList[i].quantum);
+				} else { //calculate waiting time for other cpu bursts
+					wait_time += (processList[i].startTimes[x] - processList[i].endTimes[x-1]);
+				}
+			} else { 
+				total_io++;
+			}
+		}
+		processList[i].waitingTime = wait_time;
+		processList[i].turnAroundTime = wait_time + processList[i].executionTime + (total_io * processList[i].ioBurst);		
 	}
 }
 
@@ -109,6 +134,9 @@ int main() {
 
 			//run mlfq
 			mlfq(queueList, processList, x, y);
+			//calculate the waiting and turnaround times of the processes
+			calcOutput(processList, y, x);
+			//print the process details
 			printOutput(processList, y);
 
 			//free child mallocs then struct malloc
