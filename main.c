@@ -80,7 +80,7 @@ int main() {
 
 		//input range validation
 		if(valid(x, 2, 5) && valid(y, 3, 100)) {
-			queueList = (Queue*) malloc(x*sizeof(Queue));
+			queueList = (Queue*) malloc((x+1)*sizeof(Queue));
 			processList = (Process*) malloc(y * sizeof(Process));	//create processList array of size y
 
 			int it = 0;

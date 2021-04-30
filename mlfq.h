@@ -100,58 +100,102 @@ void mlfq(Queue *queueList, Process *processList, int x, int y) {
 	for(c = 0; c < x + 1; c++) {	//allocate memory for queue.processList (+1 for the additional IO queue)
 		Queue *queue = &queueList[c];
 		
-		queue->processList = (Process*) malloc(y * sizeof(int));
+		queue->processList = (Process*) malloc((y) * sizeof(int));
 	}
     int total = totalRemaining(processList, y);
 
     int currTime = processList[0].arrivalTime;
-    int currProcessIndex = 0;
-    int currQueueIndex = 0;
     
-    //per second loop
-    while(currTime <= total) {
-        Process *process = &processList[currProcessIndex];
-        int timeIndex = timeIndeces[currProcessIndex];
-        
-        //if process has remaining time
-        if(process->executionTime > 0) {
-            Queue *queue = &queueList[currQueueIndex];
-
-            Process *queueProcess = queue->processList + queue->length;
-            queueProcess = process;  //add process to queue
-            queue->length++;
-                
-            if(queue->head == NULL) {    //for top queue, initial insert
-                queue->head = process;
-            }
+    Queue *currQueue = &queueList[0];//initialize starting queue
+    Process *currProcess = &processList[0];	//initialize starting process
+    int currQuantum = currQueue->quantum;	//initialize as first quantum
+    int currQueueIndex = 0;	//initialize queueIndex
+    int currProcessIndex = 0;
+    
+    currQueue->processList = processList;
+    
+    //add all process to first queue
+    for(c = 0; c < y; c++) {
+    	if(currQueue->length == 0) {	//if arriving at empty queue
+    		currQueue->head = currProcess;		
+		}
+		Process *queueProcessListTail = &currQueue->processList[currQueue->length];
+		queueProcessListTail = currProcess;	//add to queue.processList
+		currQueue->length++;
+	}
 	
-            process->startTimes[timeIndex] = currTime;          //set process start time
-            process->queueTimes[timeIndex] = queue->queueID;    //set queue time
-            if(process->executionTime > queue->quantum) {       //if execution is greater than quantum
-                process->executionTime -= queue->quantum;       //execute time
-                Queue *nextQueue = &queueList[(currQueueIndex + 1)%x];
-                moveTopToQueue(queue, nextQueue);               //move process to next queue
-            }
-            else {
-                process->executionTime = 0;
-                queue->length--;
-            }
-            currTime += queue->quantum;
-            if(queue->length = 0) {
-                queue->head = NULL;
-            }
-            process->endTimes[timeIndex] = currTime;    //set end time
-            process->timeSize++;
-            timeIndeces[currProcessIndex]++;            //increase time index	
-            
-            //check if round robin
-            if(currProcessIndex == y - 1) { //will only trigger if process already round-robined---
-                currQueueIndex++;                                       //--- which means we should move to next queue
-            }
-    	}
-
-        currTime++;
-        currProcessIndex = (currProcessIndex+1)%y;
+    //per second loop
+    while(currTime <= total) {    	
+    	printf("%d\n", currTime);
+		//process execution
+		if(currQueue->length > 0 && currProcess->executionTime > 0) {
+			//if there is still quantum on queue
+			if(currQueue->quantum > 0) {
+				//if first run, set startTime and queue time
+				printf("%d %d\n", currQuantum, currQueue->quantum);
+				if(currQuantum == currQueue->quantum) {
+					printf("in\n");
+					currProcess->startTimes[currProcess->timeSize] = currTime;
+					currProcess->queueTimes[currProcess->timeSize] = currQueue->queueID;
+					currProcess->timeSize++;
+				}
+				
+				currProcess->executionTime--;
+				currQueue->quantum--;	
+				
+				//if quantum or exec run out, set endTime
+				if(currQueue->quantum == 0 || currProcess->executionTime == 0) {
+					currProcess->endTimes[currProcess->timeSize - 1] = currTime + 1;	//set endTime	
+					//currQueue->quantum = currQuantum;
+				}
+			}
+			else {
+				//if quantum is 0, and process still not finished
+				if(currProcess->executionTime > 0) {
+					printf("abc\n");
+					Queue *nextQueue = &queueList[(currQueueIndex + 1)%x];	//get next queue
+				
+					//move process to next queue
+					nextQueue->head = currProcess;
+					nextQueue->length++;
+					
+				}
+				
+				//move to next process
+				currProcessIndex = (currProcessIndex + 1)%y;
+				currProcess = &processList[currProcessIndex];		//move to next process in queue
+				//remove and replace process from current queue
+				if(currQueue->length > 0) {
+					currQueue->head = currProcess;	//set head to next process
+				}
+				else {
+					currQueue->head = NULL;
+				}
+				currQueue->length--;					
+				
+				//reset quantum
+				currQueue->quantum = currQuantum;
+				currTime--;	//decrement to undo increment later (since if it reaches this part, no process was executed)
+			}
+		}
+		else {
+			currProcessIndex = (currProcessIndex + 1)%y;
+			currProcess = &processList[currProcessIndex];		//move to next process in queue
+			if(currQueue->length > 0) {
+				currQueue->head = currProcess;		//change head	
+				currQueue->quantum = currQuantum;	//reset quantum	
+			}	
+			else {
+				currQueue->head = NULL;
+				currQueue = &queueList[(currQueueIndex + 1)%x];	//move to next queue
+				currQuantum = currQueue->quantum;	//change quantum to next queue;
+				
+				currQueueIndex++;
+			}
+			currQueue->length--;				//change length
+		}
+		printf("Q[%d] QU:%d P:%d S:%d E:%d EX:%d\n", currQueue->queueID, currQueue->quantum, currProcess->processID, currProcess->startTimes[0], currProcess->endTimes[0], currProcess->executionTime);
+		currTime++;
     }
 
 }
