@@ -4,15 +4,15 @@ Steps:
 3. arrange queues by priority //
 
 CURRTIME
-4. put any new (first time to be put into a queue) process/es with arrival time == current time in queue /
+4. put any new (first time to be put into a queue) process/es with arrival time == current time in queue //
 5. the process at the head of the current queue is the current process
-6. decrease the current process's remaining execution time for cpu burst by 1, also decrease its time quantum for the current queue by 1, also decrease its next i/o burst time by 1
-7. increase current time by 1 ms
-8. if current process's remaining execution time is 0 then it is finished, not doing i/o bursts anymore if any
-9. the next i/o burst time is 0, record its start and end times for the cpu burst, cut it short, and move it to the i/o queue (not applicable to processes with 0 i/o burst time), also record the start and end times for the i/o burst  and it will stay in the i/o queue until the current time == the i/o burst end time
-10. if current process's time quantum in the current queue is 0 it moves down to a lower-priority queue, and resets its time quantum to the new queue's allotted time quantum 
-11. if ever the next i/o burst time and time quantum turn 0 at the same time for the current process, move it down to the i/o queue to do its i/o burst first and set the "last queue it came from" to the lower priority queue for step 14
-12. add next process to the front of the queue making it the new current process only if either the current process has finished its execution time/moved to a diff queue/moved to i/o queue
+6. decrease the current process's remaining execution time for cpu burst by 1, also decrease its time quantum for the current queue by 1, also decrease its next i/o burst time by 1 //
+7. increase current time by 1 ms //
+8. if current process's remaining execution time is 0 then it is finished, not doing i/o bursts anymore if any //
+9. the next i/o burst time is 0, record its start and end times for the cpu burst, cut it short, and move it to the i/o queue (not applicable to processes with 0 i/o burst time), also record the start and end times for the i/o burst  and it will stay in the i/o queue until the current time == the i/o burst end time //
+10. if current process's time quantum in the current queue is 0 it moves down to a lower-priority queue, and resets its time quantum to the new queue's allotted time quantum; if the process is already at the lowest prio queue, it still stays in the same queue //
+11. if ever the next i/o burst time and time quantum turn 0 at the same time for the current process, move it down to the i/o queue to do its i/o burst first and set the "last queue it came from" to the lower priority queue for step 14 //
+12. add next process to the front of the queue making it the new current process only if either the current process has finished its execution time/moved to a diff queue/moved to i/o queue 
 13. do a priority boost, moving all processes in the lower priority queues then processes that have finished their i/o bursts at the same time into the highest priority queue, if and only if either the current process has finished its execution time/moved to a diff queue/moved to i/o queue and current time >= next priority boost time (priority boost does not affect processes currently in i/o queue and haven't finished their i/o burst)
 14. move the process/es that have finished their i/o bursts in the i/o queue at the current time back to the last queue they came from and reset their next i/o burst time to their original number; in case of multiple processes with the same i/o burst end times, do it by first in first out order 
 15. if the current queue no longer has any processes left, the current queue would now be the nextlower priority queue; if there is no next queue, cycle back to the highest priority queue

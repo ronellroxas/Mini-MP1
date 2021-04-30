@@ -128,8 +128,15 @@ int main() {
 				processList[it].processID = f;
 				processList[it].arrivalTime = g;
 				processList[it].executionTime = h;
+				processList[it].remExeTime = h;
 				processList[it].ioBurst = i;
 				processList[it].ioInterval = j;
+				processList[it].inProcess = 0;
+				if (i == 0 || j == 0) {
+					processList[it].nextio = -1;	//set next io burst time to -1 since the process won't be needing it anyway
+				} else {
+					processList[it].nextio = j;	
+				}
 			}
 
 			//run mlfq
