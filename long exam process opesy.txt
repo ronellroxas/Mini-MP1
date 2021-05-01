@@ -27,3 +27,5 @@ formulas:
 waiting time = (1st cpu burst start time - arrival time) + (cpu burst start time - previous cpu or i/o burst end time) + (last cpu burst start time - previous cpu or i/o burst end time - remaining time quantum for last queue)
 Note: do the 2nd term for all the cpu bursts except the first and last
 turnaround time = waiting time + execution time + i/o time (for ones with i/o burst times)
+
+note: what if queue 2 is running then queue 1 suddenly has a process

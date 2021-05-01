@@ -106,7 +106,7 @@ int main() {
 		//input range validation
 		if(valid(x, 2, 5) && valid(y, 3, 100)) {
 			queueList = (Queue*) malloc((x+1)*sizeof(Queue));
-			processList = (Process*) malloc(y * sizeof(Process));	//create processList array of size y
+			processList = (Process*) malloc((y) * sizeof(Process));	//create processList array of size y
 
 			int it = 0;
 			int a, b, c;
@@ -117,6 +117,11 @@ int main() {
 				queueList[it].queueID = a;
 				queueList[it].priority = b;
 				queueList[it].quantum = c;
+				queueList[it].capacity = y;
+				queueList[it].head = 0;
+				queueList[it].length = 0;
+				queueList[it].tail = y - 1;
+				queueList[it].processList = (Process*) malloc((y) * sizeof(Process));
 			}
 			
 			int f, g, h, i, j;
@@ -137,6 +142,17 @@ int main() {
 				} else {
 					processList[it].nextio = j;	
 				}
+				processList[it].timeSize = 0;
+				//dynamically allocate arrays
+				processList[it].startTimes = (int*) malloc(h*2 * sizeof(int));
+				processList[it].endTimes = (int*) malloc(h*2 * sizeof(int));
+				processList[it].queueTimes = (int*) malloc(h*2 * sizeof(int));
+				//set times to 0
+				memset(processList[it].startTimes, 0, h*2  * sizeof(int));
+				memset(processList[it].endTimes, 0, h*2  * sizeof(int));
+        			memset(processList[it].queueTimes, 0, h*2  * sizeof(int));
+				processList[it].waitingTime = 0;
+				processList[it].turnAroundTime = 0;
 			}
 
 			//run mlfq

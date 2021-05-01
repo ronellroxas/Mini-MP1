@@ -17,6 +17,34 @@ int totalRemaining(Process *processList, int y) {
 	return total;
 }
 
+//adds process to a queue
+void enqueue(Queue *q, Process *pr) {
+	if (q->length == q->capacity) //return if already full 
+		return;
+	q->tail = (q->tail + 1) % q->capacity;
+	q->processList[q->tail] = &pr;
+	q->length++;	
+}
+
+//removes process from the head of a queue
+Process* dequeue(Queue *q) {
+	Process *pr = &q->processList[q->head];
+	q->head = (q->head) % q->capacity;
+	q->length--;
+	return pr;
+}
+
+//get process at the head of a queue
+Process* get_head(Queue *q) {
+	return q->processList[q->head];
+}
+
+//get process at the tail of a queue
+Process* get_tail(Queue *q) {
+	return q->processList[q->tail];
+}
+
+
 //move head process in q1 to q2
 void moveTopToQueue(Queue *q1, Queue *q2) {
     Process *q2List = &q2->processList[q2->length];
@@ -50,7 +78,6 @@ int processInQueue(Queue *queueList, int processID, int x) {
 //main mlfq function
 void mlfq(Queue *queueList, Process *processList, int x, int y) {
     int i = 0, z = 0;
-    int *timeIndeces;	//storage for time indices for process
 
     //sort processes arrival time
     for(i = 0; i < y; i++) {
@@ -66,7 +93,6 @@ void mlfq(Queue *queueList, Process *processList, int x, int y) {
 	
     //sort queue by priority
     for(i = 0; i < x; i++) {    
-        queueList[i].length = 0;    //initialize lengths
         for(z = i; z < x; z++) {
             if(queueList[i].priority > queueList[z].priority) {
                 Queue temp;
@@ -76,47 +102,27 @@ void mlfq(Queue *queueList, Process *processList, int x, int y) {
             }
         }
     }
-    
-	int c = 0;
-	for(c = 0; c < y; c++) {	//dynamically allocate start and end times array for each process
-		Process *process = &processList[c];
-		//dynamically allocates array based on time slice
-		process->timeSize = 0;	//set timeSize (dynamic yere
-		process->startTimes	= (int*) malloc(y*2 * sizeof(int));
-		process->endTimes = (int*) malloc(y*2 * sizeof(int)); 
-        process->queueTimes = (int*) malloc(y*2 * sizeof(int));
-		
-		//set times to 0
-		memset(process->startTimes, 0, y*2  * sizeof(int));
-		memset(process->endTimes, 0, y*2  * sizeof(int));
-        memset(process->queueTimes, 0, y*2  * sizeof(int));
-		process->waitingTime = 0;
-		process->turnAroundTime = process->executionTime;	//set to execution time only then add waiting time later
-		
-	}
 
-	for(c = 0; c < x + 1; c++) {	//allocate memory for queue.processList (+1 for the additional IO queue)
-		Queue *queue = &queueList[c];
-		
-		queue->processList = (Process*) malloc((y) * sizeof(int));
-	}
+    //initialize variables and allocate memory for IO queue
+    	queueList[x]->queueID = -1;
+	queueList[x]->priority = -1;
+	queueList[x]->quantum = -1;
+	queueList[x]->capacity = y;
+	queueList[x]->head = 0;
+	queueList[x]->length = 0;
+	queueList[x]->tail = y - 1;
+	queueList[x]->processList = (Process*) malloc((y) * sizeof(Process));
 	
 	
     int total = totalRemaining(processList, y);
-
     int currTime = processList[0].arrivalTime;
-    
     Queue *currQueue = &queueList[0];//initialize starting queue
     Process dummy; //initialize starting process as dummy data (to indicate that the 1st process hasn't arrived yet)
     dummy.processID = -23;
     Process *currProcess = &dummy;	
-    int currQueueIndex = 0;	//initialize queueIndex
-    int currProcessIndex = 0;
-    
-    currQueue->processList = processList;
     
     
-    c = 0; //will act as the counter for new processes going into the queue
+    int c = 0; //will act as the counter for new processes going into the queue
     //per second loop
     while(currTime <= total) {    	
     	printf("%d\n", currTime);
