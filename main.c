@@ -144,7 +144,7 @@ int main() {
 				}
 				processList[it].timeSize = 0;
 				//dynamically allocate arrays
-				processList[it].startTimes = (int*) malloc(h*2 * sizeof(int));
+				processList[it].startTimes = (int*) malloc(h*2 * sizeof(int)); //allocate h * 2 for the times arrays since the number of times recorded would be exactly h*2 if the io burst freq. is 1
 				processList[it].endTimes = (int*) malloc(h*2 * sizeof(int));
 				processList[it].queueTimes = (int*) malloc(h*2 * sizeof(int));
 				//set times to 0
