@@ -78,7 +78,7 @@ int processInQueue(Queue *queueList, int processID, int x) {
 }
 
 //main mlfq function
-void mlfq(Queue *queueList, Process *processList, int x, int y) {
+void mlfq(Queue *queueList, Process *processList, int x, int y, int s) {
     int i = 0, z = 0;
 
     //sort processes arrival time
@@ -124,129 +124,158 @@ void mlfq(Queue *queueList, Process *processList, int x, int y) {
     dummy.processID = -23;
     Process *currProcess = &dummy;	
     int c = 0; //will act as the counter for new processes going into the queue
-    
+    int prioBoost = s;	//act as counter for priority boost
     //per second loop
     while(currTime <= total) {    	
-    	printf("%d\n", currTime);
+    	printf("TIME: %d\n", currTime);
     	//put new processes into the top priority queue if their arrival time == current time
     	for(c = c; c < y; c++) {
-    		if (processList[c].arrivalTime == currTime) {
-    			processList[c].quantum = queueList[0].quantum; //set process quantum to top queue's quantum
-    			processList[c].lastqueue = 0; //set process current queue to the index of top queue
-    			enqueue(&queueList[0], &processList[c]); //add process to top queue
-		} else {
-			break;
-		}
+	    	if (processList[c].arrivalTime == currTime) {
+	    		processList[c].quantum = queueList[0].quantum; //set process quantum to top queue's quantum
+	   			processList[c].lastqueue = 0; //set process current queue to the index of top queue
+	   			enqueue(&queueList[0], &processList[c]); //add process to top queue
+			} else {
+				break;
+			}
     	}
     	
-    	//make the head of the current queue the current process if its arrival time >= curr time
-    	if (get_head(currQueue)->arrivalTime >= currTime)
-    		currProcess = get_head(currQueue);
-    	
-		
-	if (currProcess->processID != -23) {
-		// do nothing if the current process is still the dummy/no processes have arrived yet
-	} else if(currQueue->length > 0) { //process execution as long as the current queue has processes left
-	
-		//if start of cpu burst, set startTime and queue time
-		printf("%d %d\n", currProcess->quantum, currQueue->quantum);
-		if(currProcess->inProcess == 0) {
-			printf("in\n");
-			currProcess->startTimes[currProcess->timeSize] = currTime;
-			currProcess->queueTimes[currProcess->timeSize] = currQueue->queueID;
-			currProcess->timeSize++;
-			currProcess->inProcess = 1;
+    	//15 - move finished IO back to original queue
+		for(i = 0; i < queueList[x].length; i++) {
+			Queue *IOqueue = &queueList[x];
+			Process *temp = &IOqueue->processList[i];
+			if(temp->endTimes[temp->timeSize - 1] == currTime) {		//check if an IO process finished, based on last endTime = currTime (endTime set when process was moved to IO)
+				temp->nextio = temp->ioInterval;	//reset IO 
+				enqueue(&queueList[temp->lastqueue], dequeue(IOqueue));	//return back to last queue
+				//check queue prio happens on next loop
+			}
 		}
-				
-		//decrease the exe time, quantum, and next io burst times by 1;
-		currProcess->remExeTime--;
-		currProcess->quantum--;
-		currProcess->nextio--;
-				
-		//increase current time by 1
-		currTime++;
-				
-		//if either exe time, quantum, or next io burst time is 0, record end time
-		if(currProcess->nextio == 0 || currProcess->remExeTime == 0 || currProcess->quantum == 0) {
-			currProcess->endTimes[currProcess->timeSize - 1] = currTime;	//set endTime	
-		}
-				
-		//if the next io burst time is 0 move process to io queue and start io burst (not applied when process is already finished)
-		if(currProcess->nextio == 0 && currProcess->remExeTime > 0) {
-			if (currProcess->quantum == 0) { //if quantum goes to 0 at the same time then make process's last queue to the lower prio queue; same queue if already the lowest prio queue
-				if (currProcess->lastqueue < x - 1) {
-					currProcess->lastqueue = currQueueIndex + 1;
-					currProcess->quantum = queueList[currProcess->lastqueue].quantum; //reset quantum to new queue's quantum
-				} else if (currProcess->lastqueue == x - 1) {
-					currProcess->quantum = queueList[currProcess->lastqueue].quantum; //reset quantum to the same queue's quantum
+			
+    	//5 - check if currqueue is not highest prio
+    	for(i = 0; i < x; i++) {
+    		if(currQueue->queueID != queueList[i].queueID) {	//check first if it is not the same queue
+    			//if currQueue has lower priority and other queue has a process
+    			if(currQueue->priority > queueList[i].priority && queueList[i].length > 0) {
+    				currQueue = &queueList[i];	//Change currQueue to higher priority(move to higher prio queue)
+    				currQueueIndex = i;
 				}
 			}
-			currProcess->inProcess == 0; //process no longer in process
-			currProcess->nextio = currProcess->ioInterval; //reset next io burst time
-			//move currProcess from currQueue to io queue
-			enqueue(&queueList[x], dequeue(currQueue));
-			//record start and end times of io burst
-			currProcess->startTimes[currProcess->timeSize] = currTime;
-			currProcess->queueTimes[currProcess->timeSize] = x;
-			currProcess->endTimes[currProcess->timeSize] = currTime + currProcess->ioBurst;
-			currProcess->timeSize++;
-		}		
-		//if quantum goes to 0, move to lower prio queue (not applied when process is already finished)
-		else if(currProcess->quantum == 0 && currProcess->remExeTime > 0) {
-			Queue *nextQueue;
-			if (currProcess->lastqueue < x - 1) {
-				nextQueue = &queueList[(currQueueIndex + 1)%x];	//get next queue
-				currProcess->lastqueue = currQueueIndex + 1; //change process's last queue to the new queue's index
-			} else if (currProcess->lastqueue == x - 1) { //if lowest prio queue already just move process to the tail end of the queue
-				nextQueue = currQueue;	//get the same queue as the "new queue"
+		}
+    	
+    	//make the head of the current queue the current process if its arrival time >= curr time
+    	if (get_head(currQueue)->arrivalTime >= currTime) {
+    		currProcess = get_head(currQueue);
+		}
+    	
+		
+		if (currProcess->processID == -23) {
+			// do nothing if the current process is still the dummy/no processes have arrived yet
+		} else if(currQueue->length > 0) { //process execution as long as the current queue has processes left
+		
+			//if start of cpu burst, set startTime and queue time
+			printf("%d %d\n", currProcess->quantum, currQueue->quantum);
+			if(currProcess->inProcess == 0) {
+				currProcess->startTimes[currProcess->timeSize] = currTime;
+				currProcess->queueTimes[currProcess->timeSize] = currQueue->queueID;
+				currProcess->timeSize++;
+				currProcess->inProcess = 1;
 			}
-			currProcess->inProcess == 0; //process no longer in process
-			currProcess->quantum = nextQueue->quantum; //reset quantum to new queue's quantum
-			//moves curr process from the old queue to the new queue
-			enqueue(nextQueue, dequeue(currQueue)); 
-		}
-		//remove process from queue if it's finished
-		else if (currProcess->remExeTime == 0) {
-			dequeue(currQueue);
-			currProcess->inProcess == 0; //process no longer in process
-		}
-		
-		//TO DO: EVERYTHING BELOW THIS COMMENT	
-		//move to next process
-		currProcessIndex = (currProcessIndex + 1)%y;
-		currProcess = &processList[currProcessIndex];		//move to next process in queue
-		//remove and replace process from current queue
-		if(currQueue->length > 0) {
-			currQueue->head = currProcess;	//set head to next process
-		}
-		else {
-			currQueue->head = NULL;
-		}
-		currQueue->length--;					
+					
+			//decrease the exe time, quantum, and next io burst times by 1;
+			currProcess->remExeTime--;
+			currProcess->quantum--;
+			currProcess->nextio--;
+			prioBoost--;				
+			//increase current time by 1
+			currTime++;
+					
+			//if either exe time, quantum, or next io burst time is 0, record end time
+			if(currProcess->nextio == 0 || currProcess->remExeTime == 0 || currProcess->quantum == 0) {
+				currProcess->endTimes[currProcess->timeSize - 1] = currTime;	//set endTime	
+			}
+					
+			//if the next io burst time is 0 move process to io queue and start io burst (not applied when process is already finished)
+			if(currProcess->nextio == 0 && currProcess->remExeTime > 0) {
+				if (currProcess->quantum == 0) { //if quantum goes to 0 at the same time then make process's last queue to the lower prio queue; same queue if already the lowest prio queue
+					if (currProcess->lastqueue < x - 1) {
+						currProcess->lastqueue = currQueueIndex + 1;
+						currProcess->quantum = queueList[currProcess->lastqueue].quantum; //reset quantum to new queue's quantum
+					} else if (currProcess->lastqueue == x - 1) {
+						currProcess->quantum = queueList[currProcess->lastqueue].quantum; //reset quantum to the same queue's quantum
+					}
+				}
+				currProcess->inProcess == 0; //process no longer in process
+				currProcess->nextio = currProcess->ioInterval; //reset next io burst time
+				//move currProcess from currQueue to io queue
+				enqueue(&queueList[x], dequeue(currQueue));
+				//record start and end times of io burst
+				currProcess->startTimes[currProcess->timeSize] = currTime;
+				currProcess->queueTimes[currProcess->timeSize] = x;
+				currProcess->endTimes[currProcess->timeSize] = currTime + currProcess->ioBurst;
+				currProcess->timeSize++;
+				currTime = currProcess->endTimes[currProcess->timeSize];	//set currTime to endTime of IO
+			}		
+			//if quantum goes to 0, move to lower prio queue (not applied when process is already finished)
+			else if(currProcess->quantum == 0 && currProcess->remExeTime > 0) {
+				Queue *nextQueue;
+				if (currProcess->lastqueue < x - 1) {
+					nextQueue = &queueList[(currQueueIndex + 1)%x];	//get next queue
+					currProcess->lastqueue = currQueueIndex + 1; //change process's last queue to the new queue's index
+				} else if (currProcess->lastqueue == x - 1) { //if lowest prio queue already just move process to the tail end of the queue
+					nextQueue = currQueue;	//get the same queue as the "new queue"
+				}
+				currProcess->inProcess == 0; //process no longer in process
+				currProcess->quantum = nextQueue->quantum; //reset quantum to new queue's quantum
+				//moves curr process from the old queue to the new queue
+				enqueue(nextQueue, dequeue(currQueue));
+			}
+			//remove process from queue if it's finished
+			else if (currProcess->remExeTime == 0) {
+				dequeue(currQueue);
+				currProcess->inProcess == 0; //process no longer in process
+			}
+			
+			//TO DO: EVERYTHING BELOW THIS COMMENT	
+			
+			//PRIORITY BOOST
+			//if( prioBoost == 0 && )
+			
+			
+			//move to next process
+	//		currProcessIndex = (currProcessIndex + 1)%y;
+	//		currProcess = &processList[currProcessIndex];		//move to next process in queue
+			//remove and replace process from current queue
+	//		if(currQueue->length > 0) {
+	//			currQueue->head = currProcess;	//set head to next process
+	//		}
+	//		else {
+	//			currQueue->head = NULL;
+	//		}
+	//		currQueue->length--;					
+					
+			//reset quantum
+			//currQueue->quantum = currQuantum;
+			//currTime--;	//decrement to undo increment later (since if it reaches this part, no process was executed)
 				
-		//reset quantum
-		currQueue->quantum = currQuantum;
-		currTime--;	//decrement to undo increment later (since if it reaches this part, no process was executed)
-			
-	}
-	else { //change queue
-		currProcessIndex = (currProcessIndex + 1)%y;
-		currProcess = &processList[currProcessIndex];		//move to next process in queue
-		if(currQueue->length > 0) {
-			currQueue->head = currProcess;		//change head	
-			currQueue->quantum = currQuantum;	//reset quantum	
-		}	
-		else {
-			currQueue->head = NULL;
-			currQueue = &queueList[(currQueueIndex + 1)%x];	//move to next queue
-			currQuantum = currQueue->quantum;	//change quantum to next queue;
-			
-			currQueueIndex++;
 		}
-		currQueue->length--;				//change length
-	}
-	printf("Q[%d] QU:%d P:%d S:%d E:%d EX:%d\n", currQueue->queueID, currQueue->quantum, currProcess->processID, currProcess->startTimes[0], currProcess->endTimes[0], currProcess->remExeTime);
-		
+		else { //change queue
+			printf("unknown\n");
+	//		currProcessIndex = (currProcessIndex + 1)%y;
+	//		currProcess = &processList[currProcessIndex];		//move to next process in queue
+	//		if(currQueue->length > 0) {
+	//			currQueue->head = currProcess;		//change head	
+	//			currQueue->quantum = currQuantum;	//reset quantum	
+	//		}	
+	//		else {
+	//			currQueue->head = NULL;
+	//			currQueue = &queueList[(currQueueIndex + 1)%x];	//move to next queue
+	//			currQuantum = currQueue->quantum;	//change quantum to next queue;
+	//			
+	//			currQueueIndex++;
+	//		}
+	//		currQueue->length--;				//change length
+		}
+		printf("Q[%d] QU:%d LEN:%d P:%d S:%d E:%d EX:%d\n", currQueue->queueID, currQueue->quantum, currQueue->length, currProcess->processID, currProcess->startTimes[0], currProcess->endTimes[0], currProcess->remExeTime);
+		//currTime++;
     }
 
 }

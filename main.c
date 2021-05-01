@@ -150,13 +150,13 @@ int main() {
 				//set times to 0
 				memset(processList[it].startTimes, 0, h*2  * sizeof(int));
 				memset(processList[it].endTimes, 0, h*2  * sizeof(int));
-        			memset(processList[it].queueTimes, 0, h*2  * sizeof(int));
+        		memset(processList[it].queueTimes, 0, h*2  * sizeof(int));
 				processList[it].waitingTime = 0;
 				processList[it].turnAroundTime = 0;
 			}
 
 			//run mlfq
-			mlfq(queueList, processList, x, y);
+			mlfq(queueList, processList, x, y, s);
 			//calculate the waiting and turnaround times of the processes
 			calcOutput(processList, y, x);
 			//print the process details
