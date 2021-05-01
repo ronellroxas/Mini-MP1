@@ -29,7 +29,7 @@ void enqueue(Queue *q, Process *pr) {
 //removes process from the head of a queue
 Process* dequeue(Queue *q) {
 	Process *pr = &q->processList[q->head];
-	q->head = (q->head) % q->capacity;
+	q->head = (q->head + 1) % q->capacity;
 	q->length--;
 	return pr;
 }
@@ -212,7 +212,6 @@ void mlfq(Queue *queueList, Process *processList, int x, int y, int s) {
 				currProcess->queueTimes[currProcess->timeSize] = x;
 				currProcess->endTimes[currProcess->timeSize] = currTime + currProcess->ioBurst;
 				currProcess->timeSize++;
-				currTime = currProcess->endTimes[currProcess->timeSize];	//set currTime to endTime of IO
 			}		
 			//if quantum goes to 0, move to lower prio queue (not applied when process is already finished)
 			else if(currProcess->quantum == 0 && currProcess->remExeTime > 0) {
@@ -227,17 +226,27 @@ void mlfq(Queue *queueList, Process *processList, int x, int y, int s) {
 				currProcess->quantum = nextQueue->quantum; //reset quantum to new queue's quantum
 				//moves curr process from the old queue to the new queue
 				enqueue(nextQueue, dequeue(currQueue));
+				currProcess = get_head(currQueue);
 			}
 			//remove process from queue if it's finished
 			else if (currProcess->remExeTime == 0) {
 				dequeue(currQueue);
 				currProcess->inProcess == 0; //process no longer in process
+				currProcess = get_head(currQueue);
 			}
 			
 			//TO DO: EVERYTHING BELOW THIS COMMENT	
 			
 			//PRIORITY BOOST
-			//if( prioBoost == 0 && )
+			int z = 0;
+			if( prioBoost == 0) {
+				for(i = 1; i < x; i++) {		//loop to every queue except highest prio (0)
+					for(z = 0; z < queueList[i].length; z++) {	//loop to process of each queue
+							enqueue(&queueList[0], dequeue(&queueList[i]));	//enqueue everything to highest prio queue
+					}
+				}
+				prioBoost = s;
+			}
 			
 			
 			//move to next process
@@ -259,6 +268,9 @@ void mlfq(Queue *queueList, Process *processList, int x, int y, int s) {
 		}
 		else { //change queue
 			printf("unknown\n");
+			currQueueIndex = (currQueueIndex + 1) % x;
+			currQueue = &queueList[currQueueIndex];
+			currProcess = get_head(currQueue);
 	//		currProcessIndex = (currProcessIndex + 1)%y;
 	//		currProcess = &processList[currProcessIndex];		//move to next process in queue
 	//		if(currQueue->length > 0) {
@@ -274,7 +286,7 @@ void mlfq(Queue *queueList, Process *processList, int x, int y, int s) {
 	//		}
 	//		currQueue->length--;				//change length
 		}
-		printf("Q[%d] QU:%d LEN:%d P:%d S:%d E:%d EX:%d\n", currQueue->queueID, currQueue->quantum, currQueue->length, currProcess->processID, currProcess->startTimes[0], currProcess->endTimes[0], currProcess->remExeTime);
+		printf("Q[%d] QU:%d LEN:%d P:%d S:%d E:%d EX:%d\n", currQueue->queueID, currProcess->quantum, currQueue->length, currProcess->processID, currProcess->startTimes[0], currProcess->endTimes[0], currProcess->remExeTime);
 		//currTime++;
     }
 
