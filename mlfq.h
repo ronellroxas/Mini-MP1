@@ -190,10 +190,9 @@ void mlfq(Queue *queueList, Process *processList, int x, int y) {
 			currProcess->queueTimes[currProcess->timeSize] = x;
 			currProcess->endTimes[currProcess->timeSize] = currTime + currProcess->ioBurst;
 			currProcess->timeSize++;
-		}
-				
+		}		
 		//if quantum goes to 0, move to lower prio queue (not applied when process is already finished)
-		if(currProcess->quantum == 0 && currProcess->remExeTime > 0) {
+		else if(currProcess->quantum == 0 && currProcess->remExeTime > 0) {
 			Queue *nextQueue;
 			if (currProcess->lastqueue < x - 1) {
 				nextQueue = &queueList[(currQueueIndex + 1)%x];	//get next queue
@@ -206,10 +205,10 @@ void mlfq(Queue *queueList, Process *processList, int x, int y) {
 			//moves curr process from the old queue to the new queue
 			enqueue(nextQueue, dequeue(currQueue)); 
 		}
-		
 		//remove process from queue if it's finished
-		if (currProcess->remExeTime == 0) {
+		else if (currProcess->remExeTime == 0) {
 			dequeue(currQueue);
+			currProcess->inProcess == 0; //process no longer in process
 		}
 		
 		//TO DO: EVERYTHING BELOW THIS COMMENT	
