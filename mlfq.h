@@ -145,6 +145,7 @@ void mlfq(Queue *queueList, Process *processList, int x, int y, int s) {
 			Process *temp = &IOqueue->processList[i];
 			if(temp->endTimes[temp->timeSize - 1] == currTime) {		//check if an IO process finished, based on last endTime = currTime (endTime set when process was moved to IO)
 				temp->nextio = temp->ioInterval;	//reset IO 
+				temp->inProcess = 0;	//set to 0 to mark that it left IO, adds start time
 				enqueue(&queueList[temp->lastqueue], dequeue(IOqueue));	//return back to last queue
 				//check queue prio happens on next loop
 			}
@@ -173,7 +174,7 @@ void mlfq(Queue *queueList, Process *processList, int x, int y, int s) {
 		
 			//if start of cpu burst, set startTime and queue time
 			printf("%d %d\n", currProcess->quantum, currQueue->quantum);
-			if(currProcess->inProcess == 0) {
+			if(currProcess->inProcess == 0 || currProcess->quantum == currQueue->quantum) {
 				currProcess->startTimes[currProcess->timeSize] = currTime;
 				currProcess->queueTimes[currProcess->timeSize] = currQueue->queueID;
 				currProcess->timeSize++;
@@ -270,9 +271,9 @@ void mlfq(Queue *queueList, Process *processList, int x, int y, int s) {
 		}
 		else { //change queue
 			printf("unknown\n");
-//			currQueueIndex = (currQueueIndex + 1) % x;
-//			currQueue = &queueList[currQueueIndex];
-//			currProcess = get_head(currQueue);
+			currQueueIndex = (currQueueIndex + 1) % x;
+			currQueue = &queueList[currQueueIndex];
+			currProcess = get_head(currQueue);
 			currTime++;
 	//		currProcessIndex = (currProcessIndex + 1)%y;
 	//		currProcess = &processList[currProcessIndex];		//move to next process in queue
@@ -291,7 +292,14 @@ void mlfq(Queue *queueList, Process *processList, int x, int y, int s) {
 		}
 		printf("Q[%d] QU:%d LEN:%d P:%d EX:%d TS:%d\n", currQueue->queueID, currProcess->quantum, currQueue->length, currProcess->processID, currProcess->remExeTime, currProcess->timeSize);
 		for(i = 0; i < currProcess->timeSize; i++)
-			printf("S:%d E:%d\n", currProcess->startTimes[i], currProcess->endTimes[i]);
+			printf("Q:%d S:%d E:%d\n", currProcess->queueTimes[i], currProcess->startTimes[i], currProcess->endTimes[i]);
+		
+		//sav currProcess to processList
+		for(i = 0; i < y; i++) {	//find currProcess index in processList
+			if(currProcess->processID == processList[i].processID) {
+				processList[i] = *currProcess;	//save or copy process(not addressed)
+			}
+		}
 		//currTime++;
     }
 

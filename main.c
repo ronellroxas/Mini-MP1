@@ -63,6 +63,7 @@ void printOutput(Process *processList, int y) {
 	for(i = 0; i < y; i++) {
 		printf("P[%d]\n", processList[i].processID);
 		int z = 0;
+		printf("%d\n", processList[i].timeSize);
 		for(z = 0; z < processList[i].timeSize; z++) {
 			if(processList[i].startTimes[z] + processList[i].endTimes[z] > 0) {
 				printf("Q[%d] Start time: %-2d End time: %-2d\n",  processList[i].queueTimes[z],processList[i].startTimes[z], processList[i].endTimes[z]);
@@ -123,12 +124,12 @@ int main() {
 				queueList[it].tail = y - 1;
 				queueList[it].processList = (Process*) malloc((y) * sizeof(Process));
 			}
-			
+
 			int f, g, h, i, j;
 			//get processes
 			for(it = 0; it < y; it++) {
 				fscanf(fp, "%d %d %d %d %d\n", &f, &g, &h, &i, &j);
-				
+			
 				//store to array entry
 				processList[it].processID = f;
 				processList[it].arrivalTime = g;
