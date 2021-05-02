@@ -239,6 +239,7 @@ void mlfq(Queue *queueList, Process *processList, int x, int y, int s) {
 				enqueue(nextQueue, currProcess);
 				//currProcess = get_head(currQueue);
 				printf("Process %d moved to queue %d\n", currProcess->processID, nextQueue->queueID);
+				printf("QUEUE LEN: %d \n", currQueue->length);
 			}
 			//remove process from queue if it's finished
 			else if (currProcess->remExeTime == 0) {
@@ -251,15 +252,16 @@ void mlfq(Queue *queueList, Process *processList, int x, int y, int s) {
 			//PRIORITY BOOST
 			if( (currTime >= prioBoost) && (currProcess->inProcess == 0)) {
 				for(i = 1; i < x; i++) {		//loop to every queue except highest prio (0)
-					for(z = 0; z < queueList[i].length; z++) {	//loop to process of each queue
+					int len = queueList[i].length;
+					for(z = 0; z < len; z++) {	//loop to process of each queue
 						Process *temp = dequeue(&queueList[i]);
 						temp->quantum = queueList[0].quantum;
 						temp->lastqueue = 0;
 						enqueue(&queueList[0], temp);	//enqueue everything to highest prio queue
-						printf("Process %d BOOSTED\n", temp->processID);
+						printf("Process %d BOOSTED. length is %d\n", temp->processID, queueList[i].length);
 					}
 				}
-				prioBoost += prioBoost;
+				prioBoost += s;
 				printf("PRIO BOOST TIME. next boost at %d \n", prioBoost);
 			}
 			
