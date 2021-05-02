@@ -15,7 +15,7 @@ struct queueStruct {
     int head; //index of head process
     int tail; //index of last process
     int capacity; //max size of queue
-    Process *processList;   //process array list
+    Process **processList;   //process array list
 };
 
 typedef struct queueStruct Queue;

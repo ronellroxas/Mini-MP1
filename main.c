@@ -111,6 +111,7 @@ int main() {
 
 			int it = 0;
 			int a, b, c;
+			
 			//get queues
 			for(it= 0; it < x; it++) {
 				fscanf(fp, "%d %d %d\n", &a, &b, &c);
@@ -122,9 +123,9 @@ int main() {
 				queueList[it].head = 0;
 				queueList[it].length = 0;
 				queueList[it].tail = y - 1;
-				queueList[it].processList = (Process*) malloc((y) * sizeof(Process));
+				queueList[it].processList = malloc((y) * sizeof(Process*));
 			}
-
+			
 			int f, g, h, i, j;
 			//get processes
 			for(it = 0; it < y; it++) {

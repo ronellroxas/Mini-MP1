@@ -22,13 +22,13 @@ void enqueue(Queue *q, Process *pr) {
 	if (q->length == q->capacity) //return if already full 
 		return;
 	q->tail = (q->tail + 1) % q->capacity;
-	q->processList[q->tail] = *pr;
+	q->processList[q->tail] = pr;
 	q->length++;	
 }
 
 //removes process from the head of a queue
 Process* dequeue(Queue *q) {
-	Process *pr = &q->processList[q->head];
+	Process *pr = q->processList[q->head];
 	q->head = (q->head + 1) % q->capacity;
 	q->length--;
 	return pr;
@@ -36,12 +36,12 @@ Process* dequeue(Queue *q) {
 
 //get process at the head of a queue
 Process* get_head(Queue *q) {
-	return &q->processList[q->head];
+	return q->processList[q->head];
 }
 
 //get process at the tail of a queue
 Process* get_tail(Queue *q) {
-	return &q->processList[q->tail];
+	return q->processList[q->tail];
 }
 
 
@@ -68,7 +68,7 @@ int processInQueue(Queue *queueList, int processID, int x) {
     for(i = 0; i < x; i++) {
     	if(queueList[i].length > 0) {
 	        for(z = 0; z < queueList[i].length; z++) {
-	            if(queueList[i].processList[z].processID == processID) {
+	            if(queueList[i].processList[z]->processID == processID) {
 	                return i;
 	            }
 	        }
@@ -113,7 +113,7 @@ void mlfq(Queue *queueList, Process *processList, int x, int y, int s) {
 	queueList[x].head = 0;
 	queueList[x].length = 0;
 	queueList[x].tail = y - 1;
-	queueList[x].processList = (Process*) malloc((y) * sizeof(Process));
+	queueList[x].processList = malloc((y) * sizeof(Process*));
 	
 	
     int total = totalRemaining(processList, y);
@@ -142,7 +142,7 @@ void mlfq(Queue *queueList, Process *processList, int x, int y, int s) {
     	//15 - move finished IO back to original queue
 		for(i = 0; i < queueList[x].length; i++) {
 			Queue *IOqueue = &queueList[x];
-			Process *temp = &IOqueue->processList[i];
+			Process *temp = IOqueue->processList[i];
 			if(temp->endTimes[temp->timeSize - 1] == currTime) {		//check if an IO process finished, based on last endTime = currTime (endTime set when process was moved to IO)
 				temp->nextio = temp->ioInterval;	//reset IO 
 				temp->inProcess = 0;	//set to 0 to mark that it left IO, adds start time
