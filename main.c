@@ -64,6 +64,7 @@ void printOutput(Process *processList, int y, int x) {
 	for(i = 0; i < y; i++) {
 		printf("P[%d]\n", processList[i].processID);
 		int z = 0;
+
 		for(z = 0; z < processList[i].timeSize; z++) {
 			if(processList[i].queueTimes[z] == (x + 1)) {		
 				printf("[IO] Start time: %-2d End time: %-2d\n",  processList[i].startTimes[z], processList[i].endTimes[z]);

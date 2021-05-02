@@ -12,7 +12,7 @@ int totalRemaining(Process *processList, int y) {
 	int i = 0;
 	int total = 0;
 	for(i = 0; i < y; i++) {
-		total += processList[i].executionTime;
+		total += processList[i].remExeTime;
 	}
 	return total;
 }
@@ -129,7 +129,7 @@ void mlfq(Queue *queueList, Process *processList, int x, int y, int s) {
     int c = 0; //will act as the counter for new processes going into the queue
     int prioBoost = s;	//act as counter for priority boost
     //per second loop
-    while(currTime <= total) {    	
+    while(total > 0) {    	
     	printf("TIME: %d\n", currTime);
     	//put new processes into the top priority queue if their arrival time == current time
     	for(c = c; c < y; c++) {
@@ -137,11 +137,27 @@ void mlfq(Queue *queueList, Process *processList, int x, int y, int s) {
 	    		processList[c].quantum = queueList[0].quantum; //set process quantum to top queue's quantum
 	   			processList[c].lastqueue = 0; //set process current queue to the index of top queue
 	   			enqueue(&queueList[0], &processList[c]); //add process to top queue
-	   			printf("Process %d added for the first time .\n", c+1);
+	   			printf("Process %d added for the first time .\n", processList[c].processID);
 			} else {
 				break;
 			}
     	}
+    	
+    	//15 - move finished IO back to original queue
+			for(i = 0; i < queueList[x].length; i++) {
+				Queue *IOqueue = &queueList[x];
+				Process *temp = IOqueue->processList[i];
+				if(temp->endTimes[temp->timeSize - 1] == currTime) {		//check if an IO process finished, based on last endTime = currTime (endTime set when process was moved to IO)
+					temp->nextio = temp->ioInterval;	//reset IO 
+					temp->inProcess = 0;	//set to 0 to mark that it left IO, adds start time
+					if (temp->quantum == 0) {
+						temp->quantum = queueList[temp->lastqueue].priority;
+					} 
+					enqueue(&queueList[temp->lastqueue], dequeue(IOqueue));	//return back to last queue
+					//check queue prio happens on next loop
+					printf("Process %d finished IO burst, adding back to queue %d .\n", temp->processID, temp->lastqueue + 1);
+				}
+			}
 		
     	//5 - check if currqueue is not highest prio
     	for(i = 0; i < x; i++) {
@@ -163,11 +179,14 @@ void mlfq(Queue *queueList, Process *processList, int x, int y, int s) {
 		}
 	}
     	
-    	//make the head of the current queue the current process if its arrival time <= curr time
-    	if (get_head(currQueue)->arrivalTime <= currTime) {
+    	//make the head of the current queue the current process if its arrival time <= curr time and queue isn't empty
+    	if (currQueue->length == 0) {
+		dummy.processID = -11; //create a dummy process that tells the loop that there aren't any processes available yet
+		currProcess = &dummy;
+	} else if (get_head(currQueue)->arrivalTime <= currTime) {
     		currProcess = get_head(currQueue);
     		printf("Current process is %d.\n", currProcess->processID);
-	}
+    	}
     	
 		
 		if (currProcess->processID == -23) {
@@ -175,6 +194,12 @@ void mlfq(Queue *queueList, Process *processList, int x, int y, int s) {
 			printf("No process has arrived yet");
 		} else  { //process execution as long as the current queue has processes left
 		
+		
+		if (currProcess->processID == -11) {
+			// do nothing if the current process is still the dummy/no processes have arrived yet
+			printf("No process has arrived yet a");
+			currTime++;
+		} else {
 			//if start of cpu burst, set startTime and queue time
 			//printf("%d %d\n", currProcess->quantum, currQueue->quantum);
 			if(currProcess->inProcess == 0 || currProcess->quantum == currQueue->quantum) {
@@ -265,28 +290,24 @@ void mlfq(Queue *queueList, Process *processList, int x, int y, int s) {
 				printf("PRIO BOOST TIME. next boost at %d \n", prioBoost);
 			}
 			
-			//15 - move finished IO back to original queue
-			for(i = 0; i < queueList[x].length; i++) {
-				Queue *IOqueue = &queueList[x];
-				Process *temp = IOqueue->processList[i];
-				if(temp->endTimes[temp->timeSize - 1] == currTime) {		//check if an IO process finished, based on last endTime = currTime (endTime set when process was moved to IO)
-					temp->nextio = temp->ioInterval;	//reset IO 
-					temp->inProcess = 0;	//set to 0 to mark that it left IO, adds start time
-					if (temp->quantum == 0) {
-						temp->quantum = queueList[temp->lastqueue].priority;
-					} 
-					enqueue(&queueList[temp->lastqueue], dequeue(IOqueue));	//return back to last queue
-					//check queue prio happens on next loop
-					printf("Process %d finished IO burst, adding back to queue %d .\n", temp->processID, temp->lastqueue + 1);
+		}
+			
+			
+			//change queue if curr queue is empty (will not go through if other queues are empty as well)
+			
+			if (currQueue->length == 0) {
+				for (i = 0; i < x; i++) {
+					if (queueList[i].length != 0) {
+						currQueueIndex = (currQueueIndex + 1)%x;
+						currQueue = &queueList[currQueueIndex];
+						printf("Queue changed to %d. Older queue ran out of processes.\n", currQueue->queueID);
+						break;
+					}
 				}
 			}
 			
-			//change queue if curr queue is empty
-			if (currQueue->length == 0) {
-				currQueueIndex = (currQueueIndex + 1)%x;
-				currQueue = &queueList[currQueueIndex];
-				printf("Queue changed to %d. Older queue ran out of processes.\n", currQueue->queueID);
-			}
+			//calculate total remaining execution time for all processes
+			total = totalRemaining(processList, y);
 			
 		}
 		/*
