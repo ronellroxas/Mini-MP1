@@ -188,8 +188,7 @@ void mlfq(Queue *queueList, Process *processList, int x, int y, int s) {
 			//decrease the exe time, quantum, and next io burst times by 1;
 			currProcess->remExeTime--;
 			currProcess->quantum--;
-			currProcess->nextio--;
-			prioBoost--;				
+			currProcess->nextio--;		
 			//increase current time by 1
 			currTime++;
 			printf("TIME: %d\n", currTime);
@@ -198,19 +197,22 @@ void mlfq(Queue *queueList, Process *processList, int x, int y, int s) {
 			if(currProcess->nextio == 0 || currProcess->remExeTime == 0 || currProcess->quantum == 0) {
 				currProcess->endTimes[currProcess->timeSize - 1] = currTime;	//set endTime
 				printf("Process %d ended CPU burst.\n", currProcess->processID);
+				currProcess->inProcess = 0; //process no longer in process
+				printf("IN PROGRESS: %d\n", currProcess->inProcess);
 			}
 					
 			//if the next io burst time is 0 move process to io queue and start io burst (not applied when process is already finished)
 			if(currProcess->nextio == 0 && currProcess->remExeTime > 0) {
 				if (currProcess->quantum == 0) { //if quantum goes to 0 at the same time then make process's last queue to the lower prio queue; same queue if already the lowest prio queue
 					if (currProcess->lastqueue < x - 1) {
+						printf("Diff queue after IO\n");
 						currProcess->lastqueue = currQueueIndex + 1;
 						currProcess->quantum = queueList[currProcess->lastqueue].quantum; //reset quantum to new queue's quantum
 					} else if (currProcess->lastqueue == x - 1) {
+						printf("Same queue after IO\n");
 						currProcess->quantum = queueList[currProcess->lastqueue].quantum; //reset quantum to the same queue's quantum
 					}
 				}
-				currProcess->inProcess == 0; //process no longer in process
 				currProcess->nextio = currProcess->ioInterval; //reset next io burst time
 				//move currProcess from currQueue to io queue
 				enqueue(&queueList[x], dequeue(currQueue));
@@ -226,34 +228,35 @@ void mlfq(Queue *queueList, Process *processList, int x, int y, int s) {
 			else if(currProcess->quantum == 0 && currProcess->remExeTime > 0) {
 				Queue *nextQueue;
 				if (currProcess->lastqueue < x - 1) {
-					nextQueue = &queueList[(currQueueIndex + 1)%x];	//get next queue
+					nextQueue = &queueList[currQueueIndex + 1];	//get next queue
 					currProcess->lastqueue = currQueueIndex + 1; //change process's last queue to the new queue's index
 				} else if (currProcess->lastqueue == x - 1) { //if lowest prio queue already just move process to the tail end of the queue
 					nextQueue = currQueue;	//get the same queue as the "new queue"
 				}
-				currProcess->inProcess == 0; //process no longer in process
 				currProcess->quantum = nextQueue->quantum; //reset quantum to new queue's quantum
 				//moves curr process from the old queue to the new queue
-				enqueue(nextQueue, dequeue(currQueue));
+				dequeue(currQueue);
+				enqueue(nextQueue, currProcess);
 				//currProcess = get_head(currQueue);
 				printf("Process %d moved to queue %d\n", currProcess->processID, nextQueue->queueID);
 			}
 			//remove process from queue if it's finished
 			else if (currProcess->remExeTime == 0) {
 				dequeue(currQueue);
-				currProcess->inProcess == 0; //process no longer in process
 				currProcess = get_head(currQueue);
 				printf("Process %d FINISHED\n", currProcess->processID);
 			}
 			
+			
 			//PRIORITY BOOST
-			int z = 0;
 			if( (currTime >= prioBoost) && (currProcess->inProcess == 0)) {
 				for(i = 1; i < x; i++) {		//loop to every queue except highest prio (0)
 					for(z = 0; z < queueList[i].length; z++) {	//loop to process of each queue
 						Process *temp = dequeue(&queueList[i]);
-						temp->quantum = queueList[0].quantum;	
+						temp->quantum = queueList[0].quantum;
+						temp->lastqueue = 0;
 						enqueue(&queueList[0], temp);	//enqueue everything to highest prio queue
+						printf("Process %d BOOSTED\n", temp->processID);
 					}
 				}
 				prioBoost += prioBoost;
@@ -272,7 +275,7 @@ void mlfq(Queue *queueList, Process *processList, int x, int y, int s) {
 					} 
 					enqueue(&queueList[temp->lastqueue], dequeue(IOqueue));	//return back to last queue
 					//check queue prio happens on next loop
-					printf("Process %d finished IO burst, adding back to queue %d .\n", temp->processID, temp->lastqueue);
+					printf("Process %d finished IO burst, adding back to queue %d .\n", temp->processID, temp->lastqueue + 1);
 				}
 			}
 			
