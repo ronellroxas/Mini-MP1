@@ -31,21 +31,22 @@ void orderByStartingTime(Process *processList, int y) {
 //calculates the waiting time and turnaround time of the processes 
 void calcOutput(Process *processList, int y, int q_count) {
 	int i = 0;
-	int x = 0;
 	for(i = 0; i < y; i++) {
 		int wait_time = 0;
+		int x = 0;
 		int total_io = 0; //total io burst count
 		for (x = 0; x < processList[i].timeSize; x++) {
-			if (processList[i].queueTimes[x] != q_count) { //only cpu bursts are counted, i/o bursts don't
-				if (x = 0) { //calculate waiting time for first cpu burst
-					wait_time += (processList[i].startTimes[x] - processList[i].arrivalTime);
-				} else if (x = processList[i].timeSize - 1) { //calculate waiting time for last cpu burst
-					wait_time += (processList[i].startTimes[x] - processList[i].endTimes[x-1] - processList[i].quantum);
-				} else { //calculate waiting time for other cpu bursts
-					wait_time += (processList[i].startTimes[x] - processList[i].endTimes[x-1]);
-				}
-			} else { 
+			if (processList[i].queueTimes[x] == (q_count + 1)) { //only cpu bursts are counted, i/o bursts don't
 				total_io++;
+			} else { 
+				if (x == 0) { //calculate waiting time for first cpu burst
+					wait_time = wait_time + (processList[i].startTimes[x] - processList[i].arrivalTime);
+				} else if (x == processList[i].timeSize - 1) { //calculate waiting time for last cpu burst
+					wait_time = wait_time + (processList[i].startTimes[x] - processList[i].endTimes[x-1]);
+				} else { //calculate waiting time for other cpu bursts
+					wait_time = wait_time + (processList[i].startTimes[x] - processList[i].endTimes[x-1]);
+				}
+				printf("uno: %-2d dos: %-2d\n",  processList[i].startTimes[x], processList[i].endTimes[x-1]);
 			}
 		}
 		processList[i].waitingTime = wait_time;
@@ -63,7 +64,6 @@ void printOutput(Process *processList, int y, int x) {
 	for(i = 0; i < y; i++) {
 		printf("P[%d]\n", processList[i].processID);
 		int z = 0;
-		printf("%d\n", processList[i].timeSize);
 		for(z = 0; z < processList[i].timeSize; z++) {
 			if(processList[i].queueTimes[z] == (x + 1)) {		
 				printf("[IO] Start time: %-2d End time: %-2d\n",  processList[i].startTimes[z], processList[i].endTimes[z]);
