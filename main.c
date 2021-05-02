@@ -54,7 +54,7 @@ void calcOutput(Process *processList, int y, int q_count) {
 }
 
 //basic printing function following spec format
-void printOutput(Process *processList, int y) {
+void printOutput(Process *processList, int y, int x) {
 	int i = 0;
 	float total_wait = 0;
 	
@@ -65,7 +65,9 @@ void printOutput(Process *processList, int y) {
 		int z = 0;
 		printf("%d\n", processList[i].timeSize);
 		for(z = 0; z < processList[i].timeSize; z++) {
-			if(processList[i].startTimes[z] + processList[i].endTimes[z] > 0) {
+			if(processList[i].queueTimes[z] == (x + 1)) {		
+				printf("[IO] Start time: %-2d End time: %-2d\n",  processList[i].startTimes[z], processList[i].endTimes[z]);
+			} else {
 				printf("Q[%d] Start time: %-2d End time: %-2d\n",  processList[i].queueTimes[z],processList[i].startTimes[z], processList[i].endTimes[z]);
 			}
 		}
@@ -123,7 +125,7 @@ int main() {
 				queueList[it].head = 0;
 				queueList[it].length = 0;
 				queueList[it].tail = y - 1;
-				queueList[it].processList = malloc((y) * sizeof(Process*));
+				queueList[it].processList = (Process**)malloc((y) * sizeof(Process*));
 			}
 			
 			int f, g, h, i, j;
@@ -152,7 +154,7 @@ int main() {
 				//set times to 0
 				memset(processList[it].startTimes, 0, h*2  * sizeof(int));
 				memset(processList[it].endTimes, 0, h*2  * sizeof(int));
-        		memset(processList[it].queueTimes, 0, h*2  * sizeof(int));
+        			memset(processList[it].queueTimes, 0, h*2  * sizeof(int));
 				processList[it].waitingTime = 0;
 				processList[it].turnAroundTime = 0;
 			}
@@ -162,7 +164,7 @@ int main() {
 			//calculate the waiting and turnaround times of the processes
 			calcOutput(processList, y, x);
 			//print the process details
-			printOutput(processList, y);
+			printOutput(processList, y, x);
 
 			//free child mallocs then struct malloc
 			for(c = 0; c < y; c++) {	//free space of times per process
