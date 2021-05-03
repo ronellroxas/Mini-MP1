@@ -46,7 +46,6 @@ void calcOutput(Process *processList, int y, int q_count) {
 				} else { //calculate waiting time for other cpu bursts
 					wait_time = wait_time + (processList[i].startTimes[x] - processList[i].endTimes[x-1]);
 				}
-				printf("uno: %-2d dos: %-2d\n",  processList[i].startTimes[x], processList[i].endTimes[x-1]);
 			}
 		}
 		processList[i].waitingTime = wait_time;
